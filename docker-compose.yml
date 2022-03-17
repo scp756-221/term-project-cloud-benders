@@ -1,0 +1,19 @@
+version: "3.4"
+services:
+    db:
+      image: db:latest
+      restart: unless-stopped
+      ports:
+        - "30002:30002"
+
+    s1:
+      image: s1:latest
+      restart: unless-stopped
+      ports:
+        - "30000:30000"
+
+    s2:
+      image: s2:latest
+      restart: unless-stopped
+      ports:
+        - "30001:30001"
