@@ -33,7 +33,7 @@ def parse_args():
 
 
 def get_url(name, port):
-    return "http://{}:{}/api/v1/music/".format(name, port)
+    return "http://{}:{}/api/music/".format(name, port)
 
 
 def parse_quoted_strings(arg):

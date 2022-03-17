@@ -25,7 +25,7 @@ import unique_code
 
 # The unique exercise code
 # The EXER environment variable has a value specific to this exercise
-ucode = unique_code.exercise_hash(os.getenv('EXER'))
+ucode = unique_code.exercise_hash()
 
 # The application
 
@@ -35,7 +35,7 @@ metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Music process')
 
 db = {
-    "name": "http://cmpt756db:30002/api/v1/datastore",
+    "name": "http://db:30002/api/datastore",
     "endpoint": [
         "read",
         "write",
@@ -127,7 +127,7 @@ def delete_song(music_id):
 @bp.route('/test', methods=['GET'])
 def test():
     # This value is for user scp756-221
-    if ('a31a85721c7ce68ba92790854254a3ae29397dcf27d66bf4900c00e81ac0dc2e' !=
+    if ('974d1e928021dba2be055b4dd86ce12280d457947217dbaad254226587c398f6' !=
             ucode):
         raise Exception("Test failed")
     return {}
@@ -136,7 +136,7 @@ def test():
 # All database calls will have this prefix.  Prometheus metric
 # calls will not---they will have route '/metrics'.  This is
 # the conventional organization.
-app.register_blueprint(bp, url_prefix='/api/v1/music/')
+app.register_blueprint(bp, url_prefix='/api/music/')
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
