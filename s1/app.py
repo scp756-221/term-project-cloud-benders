@@ -32,7 +32,7 @@ metrics.info('app_info', 'User process')
 bp = Blueprint('app', __name__)
 
 db = {
-    "name": "http://cmpt756db:30002/api/v1/datastore",
+    "name": "http://db:30002/api/datastore",
     "endpoint": [
         "read",
         "write",
@@ -168,7 +168,7 @@ def logoff():
 # All database calls will have this prefix.  Prometheus metric
 # calls will not---they will have route '/metrics'.  This is
 # the conventional organization.
-app.register_blueprint(bp, url_prefix='/api/v1/user/')
+app.register_blueprint(bp, url_prefix='/api/user/')
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
