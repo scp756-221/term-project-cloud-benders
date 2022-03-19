@@ -107,12 +107,15 @@ rmusic:
 rplay:
 	$(CURL) --location --request GET 'http://$(IGWP)/api/playlist/$(PLAY_ID)' --header '$(TOKEN)' | tee -a $(LOG_DIR)/rplay.out
 
-# DELETE is used with user or music to delete a record
+# DELETE is used with user or music/playlist to delete a record
 duser:
 	$(CURL) --location --request DELETE 'http://$(IGWU)/api/user/$(USER_ID2)' --header '$(TOKEN)' | tee -a $(LOG_DIR)/duser.out
 
 dmusic:
 	$(CURL) --location --request DELETE 'http://$(IGWM)/api/music/$(MUSIC_ID2)' --header '$(TOKEN)' | tee -a $(LOG_DIR)/dmusic.out
+
+dplay:
+	$(CURL) --location --request DELETE 'http://$(IGWP)/api/playlist/$(PLAY_ID2)' --header '$(TOKEN)' | tee -a $(LOG_DIR)/dplay.out
 
 # PUT is used for login/logoff too
 apilogin:
