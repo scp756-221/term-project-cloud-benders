@@ -81,6 +81,24 @@ def get_playlist(playlist_id):
 
 @bp.route('/', methods=['POST'])
 def create_playlist():
+    headers = request.headers
+    print(headers)
+    # check header here
+    if 'Authorization' not in headers:
+        return Response(json.dumps({"error": "missing auth"}),
+                        status=401,
+                        mimetype='application/json')
+    try:
+        content = request.get_json()
+        Playlist = content['Playlist']
+        Songs = content['Songs']
+    except Exception:
+        return json.dumps({"message": "error reading arguments"})
+    url = db['name'] + '/' + db['endpoint'][1]
+    response = requests.post(
+        url,
+        json={"objtype": "playlist", "Playlist": Playlist, "Songs": Songs},
+        headers={'Authorization': headers['Authorization']})
     return (response.json())
 
 
