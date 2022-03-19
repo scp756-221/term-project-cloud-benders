@@ -27,3 +27,9 @@ services:
       restart: unless-stopped
       ports:
         - "30001:30001"
+
+    s3:
+      image: s3:latest
+      restart: unless-stopped
+      ports:
+        - "30003:30003"
