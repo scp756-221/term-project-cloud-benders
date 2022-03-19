@@ -77,10 +77,12 @@ BODY_TOKEN={ \
 # keep these ones around
 USER_ID=0d2a2931-8be6-48fc-aa9e-5a0f9f536bd3
 MUSIC_ID=2995bc8b-d872-4dd1-b396-93fde2f4bfff
+PLAY_ID=395c9000-16b0-450b-bdb6-c91f003eacb4
 
 # it's convenient to have a second set of id to test deletion (DELETE uses these id with the suffix of 2)
 USER_ID2=9175a76f-7c4d-4a3e-be57-65856c6bb77e
 MUSIC_ID2=8ed63e4f-3b1e-47f8-beb8-3604516e5a2d
+PLAY_ID2=8ed63e4f-3b1e-47f8-beb8-3604516e5a2d
 
 
 # POST is used for user (apipost) or music (apimusic) to create a new record
@@ -89,6 +91,9 @@ cuser:
 
 cmusic:
 	$(CURL) --location --request POST 'http://$(IGWM)/api/music/' --header '$(TOKEN)' --header 'Content-Type: application/json' --data-raw '$(BODY_MUSIC)' | tee -a $(LOG_DIR)/cmusic.out
+
+cplay:
+	$(CURL) --location --request POST 'http://$(IGWP)/api/playlist/' --header '$(TOKEN)' --header 'Content-Type: application/json' --data-raw '$(BODY_PLAY)' | tee -a $(LOG_DIR)/cplay.out
 
 # PUT is used for user (update) to update a record
 uuser:
