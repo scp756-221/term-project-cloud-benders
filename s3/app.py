@@ -118,7 +118,7 @@ def delete_playlist(playlist_id):
         headers={'Authorization': headers['Authorization']})
     return (response.json())
 
-@bp.route('/add_song/<playlist_id>', methods=['PUT'])
+@bp.route('/<playlist_id>/add', methods=['PUT'])
 def add_song_playlist(playlist_id):
     headers = request.headers
     # check header here
@@ -133,8 +133,10 @@ def add_song_playlist(playlist_id):
         url,
         params=payload,
         headers={'Authorization': headers['Authorization']})
-    songs = response.json()['Items'][0]['Songs']
-    print(songs)
+    try:
+        songs = response.json()['Items'][0]['Songs']
+    except Exception:
+        return json.dumps({"message": "error in getting existing song in playlist"})
 
     try:
         content = request.get_json()
@@ -145,7 +147,8 @@ def add_song_playlist(playlist_id):
     if Song in songs:
         return json.dumps({"message": "Song already added in the playlist"})
 
-    songs["S"].append(Song)
+    songs = list(songs)
+    songs.append(Song)
     url = db['name'] + '/' + db['endpoint'][3]
     response = requests.put(
         url,
@@ -155,7 +158,7 @@ def add_song_playlist(playlist_id):
     return (response.json())
 
 
-@bp.route('/delete_song/<playlist_id>', methods=['PUT'])
+@bp.route('/<playlist_id>/delete', methods=['PUT'])
 def delete_song_playlist(playlist_id):
     headers = request.headers
     # check header here
@@ -184,10 +187,6 @@ def delete_song_playlist(playlist_id):
         headers={'Authorization': headers['Authorization']})
     return (response.json())
 
-
-# All database calls will have this prefix.  Prometheus metric
-# calls will not---they will have route '/metrics'.  This is
-# the conventional organization.
 app.register_blueprint(bp, url_prefix='/api/playlist/')
 
 if __name__ == '__main__':
