@@ -3,50 +3,118 @@
 
 Name: Abhishek Rungta, Shubham Saini, Siddhant Sood, Bhawna Arya
 
-### 1. Instantiate the template files
+## Structure:
+- `cluster`: Configuration files for our cluster
+- `db`: This is the for the database service
+- `mcli`: For the music cli
+- `s1`: This is the user service
+- `s2`: This is the music service
+- `s3`: This is the playlist service
+- `tools`: Scripts that are useful in make-files
+- `loader` : loads csv files to dynamo db 
 
-#### Fill in the required values in the template variable file
+# Initial setup
+### 1. Dependencies required
 
-Copy the file `cluster/tpl-vars-blank.txt` to `cluster/tpl-vars.txt`
-and fill in all the required values in `tpl-vars.txt`.  These include
-things like your AWS keys, your GitHub signon, and other identifying
-information.  See the comments in that file for details. Note that you
-will need to have installed Gatling
-(https://gatling.io/open-source/start-testing/) first, because you
-will be entering its path in `tpl-vars.txt`.
+- istioctl
+- kubectl
+- aws
+- gcp
+- build-essentials
 
-#### Instantiate the templates
 
-Once you have filled in all the details, run
+### 2. Instantiate the templates
+
+First we need to fill in the required values in the template variable file.
+~~~
+tpl-vars.txt
+~~~
+Then initiate the template 
+~~~
+$ make -f k8s.mak templates
+~~~
+
+
+# Deployment
+
+### 1. Setting up gcp
 
 ~~~
-$ make -f k8s-tpl.mak templates
+make -f gcp.mak start
+~~~ 
+It will create 3 nodes.
+
+### 2. Provisioning the cluster
+
+~~~
+make -f k8s.mak provision
 ~~~
 
-This will check that all the programs you will need have been
-installed and are in the search path.  If any program is missing,
-install it before proceeding.
+### 3. install kiali
 
-The script will then generate makefiles personalized to the data that
-you entered in `clusters/tpl-vars.txt`.
+~~~
+make -f k8s.mak kiali
+~~~
 
-**Note:** This is the *only* time you will call `k8s-tpl.mak`
-directly. This creates all the non-templated files, such as
-`k8s.mak`.  You will use the non-templated makefiles in all the
-remaining steps.
-
-### 2. Ensure AWS DynamoDB is accessible/running
-
-Regardless of where your cluster will run, it uses AWS DynamoDB
-for its backend database. Check that you have the necessary tables
-installed by running
+### 4. Ensure AWS DynamoDB is accessible/running
 
 ~~~
 $ aws dynamodb list-tables
 ~~~
 
-The resulting output should include tables `User` and `Music`.
+## Monitoring
 
-----
+### Grafana
+
+To get the URL for grafana , run the command.
+
+username: admin
+password: prom-operator
+~~~
+make -f k8s.mak grafana-url
+~~~
+
+### Kiali
+
+To get the kiali URL , run the command
+
+~~~
+make -f k8s.mak kiali-url
+~~~
+
+### Prometheus
+
+To get the prometheus URL, run the command
+
+~~~
+make -f k8s.mak prometheus-url
+~~~
+
+## Gatling - Load Testing
+
+we created 3 gatling scripts one for each microservice
+
+~~~
+./gatling-music.sh 1000
+./gatling-playlist.sh 1000
+./gatling-user.sh 1000
+~~~
+ The above command basically generates test load on all the three applications. Where the argument specifies the number of service objects.
+
+we can adjust the load by specifying the argument.
+
+### Stopping gatling
+
+~~~
+./tools/kill-gatling.sh
+~~~
+
+### Close the cluster
+
+~~~
+make -f gcp.mak stop
+~~~
+
+
 
 
