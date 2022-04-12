@@ -28,7 +28,7 @@ metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Playlist process')
 
 db = {
-    "name": "http://db:30002/api/datastore",
+    "name": "http://cmpt756db:30002/api/datastore",
     "endpoint": [
         "read",
         "write",
