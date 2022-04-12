@@ -22,7 +22,7 @@ loader_token = os.getenv('SVC_LOADER_TOKEN')
 INITIAL_WAIT_SEC = 1
 
 db = {
-    "name": "http://cmpt756db:30002/api/v1/datastore",
+    "name": "http://cmpt756db:30002/api/datastore",
 }
 
 
@@ -66,6 +66,21 @@ def create_song(artist, title, uuid):
               "uuid": uuid})
     return (response.json())
 
+def create_playlist(playlist, songs, uuid):
+    """
+    Create a playlist.
+    If a record already exists with the same playlist and song,
+    the old UUID is replaced with this one.
+    """
+    url = db['name'] + '/load'
+    response = requests.post(
+        url,
+        auth=build_auth(),
+        json={"objtype": "playlist",
+              "Playlist": playlist,
+              "Songs": songs,
+              "uuid": uuid})
+    return (response.json())
 
 def check_resp(resp, key):
     if 'http_status_code' in resp:
@@ -107,3 +122,16 @@ if __name__ == '__main__':
                 print('Error creating song {} {}, {}'.format(artist,
                                                              title,
                                                              uuid))
+
+    with open('{}/playlist/playlist.csv'.format(resource_dir), 'r') as inp:
+        rdr = csv.reader(inp)
+        next(rdr)  # Skip header
+        for name, songs, uuid in rdr:
+            resp = create_playlist(name.strip(),
+                               songs.strip(),
+                               uuid.strip())
+            resp = check_resp(resp, 'playlist_id')
+            if resp is None or resp != uuid:
+                print('Error creating playlist {} {}, {}'.format(name,
+                                                                 songs,
+                                                                 uuid))
