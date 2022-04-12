@@ -28,11 +28,12 @@ metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Playlist process')
 
 db = {
-    "name": "http://db:30002/api/datastore",
+    "name": "http://cmpt756db:30002/api/datastore",
     "endpoint": [
         "read",
         "write",
-        "delete"
+        "delete",
+        "update"
     ]
 }
 bp = Blueprint('app', __name__)
@@ -58,7 +59,7 @@ def list_all():
         return Response(json.dumps({"error": "missing auth"}),
                         status=401,
                         mimetype='application/json')
-    # list all songs here
+    # list all playlist here
     return {}
 
 
@@ -93,7 +94,7 @@ def create_playlist():
         Playlist = content['Playlist']
         Songs = content['Songs']
     except Exception:
-        return json.dumps({"message": "error reading arguments"})
+        return json.dumps({"message": "Error: Arguments not found"})
     url = db['name'] + '/' + db['endpoint'][1]
     response = requests.post(
         url,
@@ -117,19 +118,75 @@ def delete_playlist(playlist_id):
         headers={'Authorization': headers['Authorization']})
     return (response.json())
 
+@bp.route('/<playlist_id>/add', methods=['PUT'])
+def add_song_playlist(playlist_id):
+    headers = request.headers
+    # check header here
+    if 'Authorization' not in headers:
+        return Response(json.dumps({"error": "missing auth"}),
+                        status=401,
+                        mimetype='application/json')
+    payload = {"objtype": "playlist", "objkey": playlist_id}
 
-@bp.route('/test', methods=['GET'])
-def test():
-    # This value is for user scp756-221
-    if ('974d1e928021dba2be055b4dd86ce12280d457947217dbaad254226587c398f6' !=
-            ucode):
-        raise Exception("Test failed")
-    return {}
+    url = db['name'] + '/' + db['endpoint'][0]
+    response = requests.get(
+        url,
+        params=payload,
+        headers={'Authorization': headers['Authorization']})
+    try:
+        songs = response.json()['Items'][0]['Songs']
+    except Exception:
+        return json.dumps({"message": "error in getting existing song in playlist"})
+
+    try:
+        content = request.get_json()
+        print(content)
+        Song = content['music_id']
+    except Exception:
+        return json.dumps({"message": "argument mismatch"})
+    if Song in songs:
+        return json.dumps({"message": "Song already added in the playlist"})
+
+    songs = list(songs)
+    songs.append(Song)
+    url = db['name'] + '/' + db['endpoint'][3]
+    response = requests.put(
+        url,
+        params={"objtype": "playlist", "objkey": playlist_id},
+        json={"Songs": songs},
+        headers={'Authorization': headers['Authorization']})
+    return (response.json())
 
 
-# All database calls will have this prefix.  Prometheus metric
-# calls will not---they will have route '/metrics'.  This is
-# the conventional organization.
+@bp.route('/<playlist_id>/delete', methods=['PUT'])
+def delete_song_playlist(playlist_id):
+    headers = request.headers
+    # check header here
+    if 'Authorization' not in headers:
+        return Response(json.dumps({"error": "missing auth"}),
+                        status=401,
+                        mimetype='application/json')
+    try:
+        content = request.get_json()
+        music_id = content['music_id']
+    except Exception:
+        return json.dumps({"message": "Error: Arguments not found"})
+
+    songs = get_playlist(playlist_id)['Items'][0]['Songs']
+    try:
+        songs.remove(music_id)
+    except Exception:
+        return json.dumps({"message": "Song doesn't exist in playlist"})
+
+    payload = {"objtype": "playlist", "objkey": playlist_id}
+    url = db['name'] + '/' + db['endpoint'][3]
+    response = requests.put(
+        url,
+        params=payload,
+        json={"Songs": songs},
+        headers={'Authorization': headers['Authorization']})
+    return (response.json())
+
 app.register_blueprint(bp, url_prefix='/api/playlist/')
 
 if __name__ == '__main__':
