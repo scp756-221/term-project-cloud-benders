@@ -19,7 +19,7 @@ Name: Abhishek Rungta, Shubham Saini, Siddhant Sood, Bhawna Arya
 - istioctl
 - kubectl
 - aws
-- gcp
+- gcloud
 - build-essentials
 
 
@@ -31,7 +31,7 @@ tpl-vars.txt
 ~~~
 Then initiate the template 
 ~~~
-$ make -f k8s.mak templates
+$ make -f k8s-tpl.mak templates
 ~~~
 
 
