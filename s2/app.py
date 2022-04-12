@@ -20,13 +20,6 @@ import requests
 
 import simplejson as json
 
-# Local modules
-#import unique_code
-
-# The unique exercise code
-# The EXER environment variable has a value specific to this exercise
-#ucode = unique_code.exercise_hash()
-
 # The application
 
 app = Flask(__name__)
@@ -35,7 +28,7 @@ metrics = PrometheusMetrics(app)
 metrics.info('app_info', 'Music process')
 
 db = {
-    "name": "http://db:30002/api/v1/datastore",
+    "name": "http://cmpt756db:30002/api/datastore",
     "endpoint": [
         "read",
         "write",
@@ -124,15 +117,6 @@ def delete_song(music_id):
     return (response.json())
 
 
-@bp.route('/test', methods=['GET'])
-def test():
-    # This value is for user scp756-221
-    if ('974d1e928021dba2be055b4dd86ce12280d457947217dbaad254226587c398f6' !=
-            ucode):
-        raise Exception("Test failed")
-    return {}
-
-
 # All database calls will have this prefix.  Prometheus metric
 # calls will not---they will have route '/metrics'.  This is
 # the conventional organization.
@@ -143,7 +127,6 @@ if __name__ == '__main__':
         logging.error("missing port arg 1")
         sys.exit(-1)
 
-    #app.logger.error("Unique code: {}".format(ucode))
     p = int(sys.argv[1])
     # Do not set debug=True---that will disable the Prometheus metrics
     app.run(host='0.0.0.0', port=p, threaded=True)
