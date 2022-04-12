@@ -5,7 +5,7 @@ Sample application---playlist service.
 
 # Standard library modules
 import logging
-import os
+import random
 import sys
 
 # Installed packages
@@ -75,6 +75,7 @@ def get_playlist(playlist_id):
                         mimetype='application/json')
     payload = {"objtype": "playlist", "objkey": playlist_id}
 
+    # This version will return 500 for a fraction of its calls
     if random.randrange(100) < PERCENT_ERROR:
         return Response(json.dumps({"error": "get_song failed"}),
                         status=500,
