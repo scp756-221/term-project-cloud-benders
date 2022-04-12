@@ -36,7 +36,7 @@ bp = Blueprint('app', __name__)
 
 # default to us-east-1 if no region is specified
 # (us-east-1 is the default/only supported region for a starter account)
-region = os.getenv('AWS_REGION', 'us-east-1')
+region = os.getenv('AWS_REGION', 'us-west-2')
 
 # these must be present; if they are missing, we should probably bail now
 access_key = os.getenv('AWS_ACCESS_KEY_ID')
@@ -216,7 +216,7 @@ def readiness():
 # All database calls will have this prefix.  Prometheus metric
 # calls will not---they will have route '/metrics'.  This is
 # the conventional organization.
-app.register_blueprint(bp, url_prefix='/api/v1/datastore/')
+app.register_blueprint(bp, url_prefix='/api/datastore/')
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
