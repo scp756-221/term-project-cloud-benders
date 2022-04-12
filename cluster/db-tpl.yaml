@@ -92,14 +92,14 @@ spec:
         - containerPort: 30002
         livenessProbe:
           httpGet:
-            path: /api/v1/datastore/health
+            path: /api/datastore/health
             port: 30002
           initialDelaySeconds: 10
           periodSeconds: 5
           failureThreshold: 5
         readinessProbe:
           httpGet:
-            path: /api/v1/datastore/readiness
+            path: /api/datastore/readiness
             port: 30002
           initialDelaySeconds: 10
           periodSeconds: 5

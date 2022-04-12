@@ -62,14 +62,14 @@ spec:
         - containerPort: 30000
         livenessProbe:
           httpGet:
-            path: /api/v1/user/health
+            path: /api/user/health
             port: 30000
           initialDelaySeconds: 10
           periodSeconds: 5
           failureThreshold: 5
         readinessProbe:
           httpGet:
-            path: /api/v1/user/readiness
+            path: /api/user/readiness
             port: 30000
           initialDelaySeconds: 10
           periodSeconds: 5
