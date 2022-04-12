@@ -9,7 +9,7 @@ services:
       working_dir: /home/dynamodblocal
 
     db:
-      image: db:latest
+      build: db
       restart: unless-stopped
       ports:
         - "30002:30002"
@@ -17,19 +17,19 @@ services:
         - .aws.env
 
     s1:
-      image: s1:latest
+      build: s1
       restart: unless-stopped
       ports:
         - "30000:30000"
 
     s2:
-      image: s2:latest
+      build: s2
       restart: unless-stopped
       ports:
         - "30001:30001"
 
     s3:
-      image: s3:latest
+      build: s3
       restart: unless-stopped
       ports:
         - "30003:30003"
