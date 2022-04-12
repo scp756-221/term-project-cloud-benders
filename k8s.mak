@@ -69,20 +69,25 @@ provision: istio prom deploy
 # --- deploy: Deploy and monitor the three microservices
 # Use `provision` to deploy the entire stack (including Istio, Prometheus, ...).
 # This target only deploys the sample microservices
-deploy: appns gw s1 s2 db monitoring
+deploy: appns gw s1 s2 s3 db monitoring
 	$(KC) -n $(APP_NS) get gw,vs,deploy,svc,pods
 
 # --- rollout: Rollout new deployments of all microservices
-rollout: rollout-s1 rollout-s2 rollout-db
+rollout: rollout-s1 rollout-s2 rollout-s3 rollout-db
 
 # --- rollout-s1: Rollout a new deployment of S1
 rollout-s1: s1
 	$(KC) rollout -n $(APP_NS) restart deployment/cmpt756s1
 
 # --- rollout-s2: Rollout a new deployment of S2
-rollout-s2: $(LOG_DIR)/s2-$(S2_VER).repo.log  cluster/s2-dpl-$(S2_VER).yaml
-	$(KC) -n $(APP_NS) apply -f cluster/s2-dpl-$(S2_VER).yaml | tee $(LOG_DIR)/rollout-s2.log
-	$(KC) rollout -n $(APP_NS) restart deployment/cmpt756s2-$(S2_VER) | tee -a $(LOG_DIR)/rollout-s2.log
+rollout-s2: $(LOG_DIR)/s2.repo.log  cluster/s2-dpl.yaml
+	$(KC) -n $(APP_NS) apply -f cluster/s2-dpl.yaml | tee $(LOG_DIR)/rollout-s2.log
+	$(KC) rollout -n $(APP_NS) restart deployment/cmpt756s2 | tee -a $(LOG_DIR)/rollout-s2.log
+
+# --- rollout-s3: Rollout a new deployment of S3
+rollout-s3: $(LOG_DIR)/s3.repo.log  cluster/s3-dpl.yaml
+	$(KC) -n $(APP_NS) apply -f cluster/s3-dpl.yaml | tee $(LOG_DIR)/rollout-s3.log
+	$(KC) rollout -n $(APP_NS) restart deployment/cmpt756s3 | tee -a $(LOG_DIR)/rollout-s3.log
 
 # --- rollout-db: Rollout a new deployment of DB
 rollout-db: db
@@ -177,6 +182,7 @@ loader: dynamodb-init $(LOG_DIR)/loader.repo.log cluster/loader.yaml
 	$(KC) -n $(APP_NS) delete --ignore-not-found=true jobs/cmpt756loader
 	tools/build-configmap.sh gatling/resources/users.csv cluster/users-header.yaml | kubectl -n $(APP_NS) apply -f -
 	tools/build-configmap.sh gatling/resources/music.csv cluster/music-header.yaml | kubectl -n $(APP_NS) apply -f -
+	tools/build-configmap.sh gatling/resources/playlist.csv cluster/playlist-header.yaml | kubectl -n $(APP_NS) apply -f -
 	$(KC) -n $(APP_NS) apply -f cluster/loader.yaml | tee $(LOG_DIR)/loader.log
 
 # --- dynamodb-init: set up our DynamoDB tables
@@ -287,6 +293,24 @@ s2: rollout-s2 cluster/s2-svc.yaml cluster/s2-sm.yaml cluster/s2-vs.yaml
 	$(KC) -n $(APP_NS) apply -f cluster/s2-sm.yaml | tee -a $(LOG_DIR)/s2.log
 	$(KC) -n $(APP_NS) apply -f cluster/s2-vs.yaml | tee -a $(LOG_DIR)/s2.log
 
+s2v2: cluster/s2-dpl-v2.yaml cluster/s2-svc.yaml cluster/s2-sm.yaml cluster/s2-vs-canary.yaml
+	$(KC) -n $(APP_NS) apply -f cluster/s2-dpl-v2.yaml | tee $(LOG_DIR)/s2.log
+	$(KC) -n $(APP_NS) apply -f cluster/s2-svc.yaml | tee $(LOG_DIR)/s2.log
+	$(KC) -n $(APP_NS) apply -f cluster/s2-sm.yaml | tee -a $(LOG_DIR)/s2.log
+	$(KC) -n $(APP_NS) apply -f cluster/s2-vs-canary.yaml | tee -a $(LOG_DIR)/s2.log
+
+# Update S2 and associated monitoring, rebuilding if necessary
+s3: rollout-s3 cluster/s3-svc.yaml cluster/s3-sm.yaml cluster/s3-vs.yaml
+	$(KC) -n $(APP_NS) apply -f cluster/s3-svc.yaml | tee $(LOG_DIR)/s3.log
+	$(KC) -n $(APP_NS) apply -f cluster/s3-sm.yaml | tee -a $(LOG_DIR)/s3.log
+	$(KC) -n $(APP_NS) apply -f cluster/s3-vs.yaml | tee -a $(LOG_DIR)/s3.log
+
+s3v2: cluster/s3-dpl-v2.yaml cluster/s3-svc.yaml cluster/s3-sm.yaml cluster/s3-vs-canary.yaml
+	$(KC) -n $(APP_NS) apply -f cluster/s3-dpl-v2.yaml | tee $(LOG_DIR)/s3.log
+	$(KC) -n $(APP_NS) apply -f cluster/s3-svc.yaml | tee $(LOG_DIR)/s3.log
+	$(KC) -n $(APP_NS) apply -f cluster/s3-sm.yaml | tee -a $(LOG_DIR)/s3.log
+	$(KC) -n $(APP_NS) apply -f cluster/s3-vs-canary.yaml | tee -a $(LOG_DIR)/s3.log
+
 # Update DB and associated monitoring, rebuilding if necessary
 db: $(LOG_DIR)/db.repo.log cluster/awscred.yaml cluster/dynamodb-service-entry.yaml cluster/db.yaml cluster/db-sm.yaml cluster/db-vs.yaml
 	$(KC) -n $(APP_NS) apply -f cluster/awscred.yaml | tee $(LOG_DIR)/db.log
@@ -296,7 +320,7 @@ db: $(LOG_DIR)/db.repo.log cluster/awscred.yaml cluster/dynamodb-service-entry.y
 	$(KC) -n $(APP_NS) apply -f cluster/db-vs.yaml | tee -a $(LOG_DIR)/db.log
 
 # Build & push the images up to the CR
-cri: $(LOG_DIR)/s1.repo.log $(LOG_DIR)/s2-$(S2_VER).repo.log $(LOG_DIR)/db.repo.log
+cri: $(LOG_DIR)/s1.repo.log $(LOG_DIR)/s2.repo.log $(LOG_DIR)/s3.repo.log $(LOG_DIR)/db.repo.log $(LOG_DIR)/loader.repo.log
 
 # Build the s1 service
 $(LOG_DIR)/s1.repo.log: s1/Dockerfile s1/app.py s1/requirements.txt
@@ -305,10 +329,16 @@ $(LOG_DIR)/s1.repo.log: s1/Dockerfile s1/app.py s1/requirements.txt
 	$(DK) push $(CREG)/$(REGID)/cmpt756s1:$(APP_VER_TAG) | tee $(LOG_DIR)/s1.repo.log
 
 # Build the s2 service
-$(LOG_DIR)/s2-$(S2_VER).repo.log: s2/$(S2_VER)/Dockerfile s2/$(S2_VER)/app.py s2/$(S2_VER)/requirements.txt
+$(LOG_DIR)/s2.repo.log: s2/Dockerfile s2/app.py s2/requirements.txt
 	make -f k8s.mak --no-print-directory registry-login
-	$(DK) build $(ARCH) -t $(CREG)/$(REGID)/cmpt756s2:$(S2_VER) s2/$(S2_VER) | tee $(LOG_DIR)/s2-$(S2_VER).img.log
-	$(DK) push $(CREG)/$(REGID)/cmpt756s2:$(S2_VER) | tee $(LOG_DIR)/s2-$(S2_VER).repo.log
+	$(DK) build $(ARCH) -t $(CREG)/$(REGID)/cmpt756s2:$(APP_VER_TAG) s2 | tee $(LOG_DIR)/s2.img.log
+	$(DK) push $(CREG)/$(REGID)/cmpt756s2:$(APP_VER_TAG) | tee $(LOG_DIR)/s2.repo.log
+
+# Build the s3 service
+$(LOG_DIR)/s3.repo.log: s3/Dockerfile s3/app.py s3/requirements.txt
+	make -f k8s.mak --no-print-directory registry-login
+	$(DK) build $(ARCH) -t $(CREG)/$(REGID)/cmpt756s3:$(APP_VER_TAG) s3 | tee $(LOG_DIR)/s3.img.log
+	$(DK) push $(CREG)/$(REGID)/cmpt756s3:$(APP_VER_TAG) | tee $(LOG_DIR)/s3.repo.log
 
 # Build the db service
 $(LOG_DIR)/db.repo.log: db/Dockerfile db/app.py db/requirements.txt
@@ -326,8 +356,10 @@ $(LOG_DIR)/loader.repo.log: loader/app.py loader/requirements.txt loader/Dockerf
 # the updated images to the registry
 cr: registry-login
 	$(DK) push $(CREG)/$(REGID)/cmpt756s1:$(APP_VER_TAG) | tee $(LOG_DIR)/s1.repo.log
-	$(DK) push $(CREG)/$(REGID)/cmpt756s2:$(S2_VER) | tee $(LOG_DIR)/s2.repo.log
+	$(DK) push $(CREG)/$(REGID)/cmpt756s2:$(APP_VER_TAG) | tee $(LOG_DIR)/s2.repo.log
+	$(DK) push $(CREG)/$(REGID)/cmpt756s3:$(APP_VER_TAG) | tee $(LOG_DIR)/s3.repo.log
 	$(DK) push $(CREG)/$(REGID)/cmpt756db:$(APP_VER_TAG) | tee $(LOG_DIR)/db.repo.log
+	$(DK) push $(CREG)/$(REGID)/cmpt756loader:$(APP_VER_TAG) | tee $(LOG_DIR)/loader.repo.log
 
 # ---------------------------------------------------------------------------------------
 # Handy bits for exploring the container images... not necessary
