@@ -39,65 +39,65 @@ spec:
   # means if any OTHER service on port 80 wants to load from these
   # routes, that service will fail.
   # Attempt to service Grafana from :80/grafana
-  #- match:
-  #  - uri:
-  #      prefix: /grafana
-  #  rewrite:
-  #    uri: /
-  #  route:
-  #  - destination:
-  #      host: c756-grafana
-  #      port:
-  #        number: 80
-  #- match:
-  #  - uri:
-  #      prefix: /public
-  #  rewrite:
-  #    uri: /public
-  #  route:
-  #  - destination:
-  #      host: c756-grafana
-  #      port:
-  #        number: 80
-  #- match:
-  #  - uri:
-  #      prefix: /api
-  #  rewrite:
-  #    uri: /api
-  #  route:
-  #  - destination:
-  #      host: c756-grafana
-  #      port:
-  #        number: 80
-  #- match:
-  #  - uri:
-  #      prefix: /avatar
-  #  rewrite:
-  #    uri: /avatar
-  #  route:
-  #  - destination:
-  #      host: c756-grafana
-  #      port:
-  #        number: 80
-  # Attempt to serve Prometheus from :80/prometheus
-  #- match:
-  #  - uri:
-  #      prefix: /prometheus
-  #  rewrite:
-  #    uri: /prometheus
-  #  route:
-  #  - destination:
-  #      host: c756-kube-p-prometheus
-  #      port:
-  #        number: 9090
-  # Prometheus static resources
-  #- match:
-  #  - uri:
-  #      prefix: /static
-  #  rewrite:
-  #    uri: /static
-  #  route:
-  #  - destination:
-  #      host: c756-kube-p-prometheus
-  #      port:
-  #        number: 9090
+  - match:
+    - uri:
+        prefix: /grafana
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: c756-grafana
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /public
+    rewrite:
+      uri: /public
+    route:
+    - destination:
+        host: c756-grafana
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /api
+    rewrite:
+      uri: /api
+    route:
+    - destination:
+        host: c756-grafana
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /avatar
+    rewrite:
+      uri: /avatar
+    route:
+    - destination:
+        host: c756-grafana
+        port:
+          number: 80
+  #Attempt to serve Prometheus from :80/prometheus
+  - match:
+    - uri:
+        prefix: /prometheus
+    rewrite:
+      uri: /prometheus
+    route:
+    - destination:
+        host: c756-kube-p-prometheus
+        port:
+          number: 9090
+  #Prometheus static resources
+  - match:
+    - uri:
+        prefix: /static
+    rewrite:
+      uri: /static
+    route:
+    - destination:
+        host: c756-kube-p-prometheus
+        port:
+          number: 9090

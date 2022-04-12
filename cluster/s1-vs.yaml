@@ -13,9 +13,9 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /api/v1/user
+        prefix: /api/user
     rewrite:
-      uri: /api/v1/user
+      uri: /api/user
     route:
     - destination:
         host: cmpt756s1

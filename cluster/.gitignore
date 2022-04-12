@@ -1,6 +1,9 @@
 db.yaml
 s1.yaml
 s2-dpl-v*.yaml
+s2-dpl.yaml
+s3-dpl-v*.yaml
+s3-dpl.yaml
 !s2-dpl-*-tpl.yaml
 loader.yaml
 db-nohealth.yaml

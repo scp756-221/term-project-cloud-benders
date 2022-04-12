@@ -11,9 +11,9 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /api/v1/datastore
+        prefix: /api/datastore
     rewrite:
-      uri: /api/v1/datastore
+      uri: /api/datastore
     route:
     - destination:
         host: cmpt756db

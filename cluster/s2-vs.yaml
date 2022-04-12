@@ -34,9 +34,9 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /api/v1/music
+        prefix: /api/music
     rewrite:
-      uri: /api/v1/music
+      uri: /api/music
     route:
     - weight: 100
       destination:
